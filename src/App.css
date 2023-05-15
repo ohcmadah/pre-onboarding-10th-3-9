@@ -9,12 +9,14 @@
 
 :root {
   --neutral-light-white: #FFFFFF;
+  --neutral-light-100: #F2F2F2;
   --neutral-light-300: #dedede;
   --neutral-dark-600: #9F9F9F;
   --neutral-dark-700: #7d7d7d;
   --neutral-dark-800: #4B4B4B;
   --neutral-dark-black: #000000;
   --green-base-500: #2BC9BA;
+  --green-T-100: #D5F4F1;
 }
 
 body {
@@ -83,6 +85,10 @@ body {
   animation: spin 1s linear infinite;
 }
 
+.icon-more {
+  background-image: url(./assets/option-horiz.svg);
+}
+
 .input-text {
   outline: none;
   border: none;
@@ -122,6 +128,30 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.dropdown-item:hover {
+  background-color: var(--neutral-light-100);
+}
+
+.dropdown-item:active {
+  background-color: var(--green-T-100);
+}
+
+.more {
+  width: 100%;
+  margin-top: 4px;
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cursor-pointer {
+  cursor: pointer;
 }
 
 .dropdown-item>.text {

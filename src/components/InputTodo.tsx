@@ -3,10 +3,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createTodo } from '../api/todo';
 import debounce from '../utils/debounce';
 import useFocus from '../hooks/useFocus';
-import { getSuggestions } from '../api/search';
-import { Suggestion, Todo } from '../@types';
+import useSuggestions from '../hooks/useSuggestions';
+import { Todo } from '../@types';
+import Dropdown from './Dropdown';
 
 const DEBOUNCE_TIME = 500;
+const INITIAL_PAGE_NUM = 1;
 
 interface InputTodoProps {
   addTodo: (newTodo: Todo) => void;
@@ -14,10 +16,12 @@ interface InputTodoProps {
 
 const InputTodo = ({ addTodo }: InputTodoProps) => {
   const [inputText, setInputText] = useState('');
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [page, setPage] = useState(INITIAL_PAGE_NUM);
+  const { isLoading: isSearching, suggestions, hasMore } = useSuggestions(inputText, page);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSearching, setIsSearching] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+
   const { ref, setFocus } = useFocus<HTMLInputElement>();
 
   useEffect(() => {
@@ -29,29 +33,6 @@ const InputTodo = ({ addTodo }: InputTodoProps) => {
     setIsTyping(true);
     stopTyping();
   };
-
-  useEffect(() => {
-    const trimmed = inputText.trim();
-    if (!trimmed) {
-      return undefined;
-    }
-
-    const controller = new AbortController();
-    const { signal } = controller;
-
-    const debounced = debounce(async () => {
-      setIsSearching(true);
-      const data = await getSuggestions({ params: { q: trimmed, page: 1, limit: 10 }, signal });
-      setSuggestions(data.result);
-      setIsSearching(false);
-    }, 500);
-    debounced();
-
-    return () => {
-      debounced.clear();
-      controller.abort();
-    };
-  }, [inputText]);
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent<HTMLFormElement>) => {
@@ -83,6 +64,8 @@ const InputTodo = ({ addTodo }: InputTodoProps) => {
     [inputText, addTodo],
   );
 
+  const handleMore = () => setPage((prev) => prev + 1);
+
   return (
     <form
       className={['form-container', isSearching ? 'searching' : '', isTyping ? 'typing' : ''].join(
@@ -102,34 +85,21 @@ const InputTodo = ({ addTodo }: InputTodoProps) => {
         disabled={isSubmitting}
       />
 
-      {isSearching && <div className="icon icon-loading" />}
+      {!hasMore && isSearching && <div className="icon icon-loading" />}
 
       {suggestions.length !== 0 && (
-        <ul className="dropdown">
-          {suggestions.map((suggestion) => {
-            const keywordRegex = new RegExp(`(${inputText})`, 'gi');
-            const texts = suggestion.split(keywordRegex);
-            return (
-              <li className="dropdown-item">
-                {texts.map((text, idx) => {
-                  const key = text + idx;
-                  if (keywordRegex.test(text)) {
-                    return (
-                      <span key={key} className="text same">
-                        {text}
-                      </span>
-                    );
-                  }
-                  return (
-                    <span key={key} className="text">
-                      {text}
-                    </span>
-                  );
-                })}
-              </li>
-            );
-          })}
-        </ul>
+        <Dropdown q={inputText} suggestions={suggestions}>
+          {hasMore &&
+            (isSearching ? (
+              <div className="more">
+                <div className="icon icon-loading" />
+              </div>
+            ) : (
+              <button type="button" className="more cursor-pointer" onClick={handleMore}>
+                <div className="icon icon-more" />
+              </button>
+            ))}
+        </Dropdown>
       )}
     </form>
   );
