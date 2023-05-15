@@ -7,7 +7,11 @@ export const getTodoList = async () => {
   try {
     const response = await instance.get<Todo[]>(`${RESOURCE}`);
 
-    return response;
+    if (response.opcode === 200) {
+      return response.data;
+    }
+
+    throw new Error(response.message);
   } catch (error) {
     throw new Error('API getTodoList error');
   }
@@ -17,7 +21,11 @@ export const createTodo = async (data: Pick<Todo, 'title'>) => {
   try {
     const response = await instance.post<Todo>(`${RESOURCE}`, data);
 
-    return response;
+    if (response.opcode === 200) {
+      return response.data;
+    }
+
+    throw new Error(response.message);
   } catch (error) {
     throw new Error('API createTodo error');
   }
@@ -25,9 +33,13 @@ export const createTodo = async (data: Pick<Todo, 'title'>) => {
 
 export const deleteTodo = async (id: Todo['id']) => {
   try {
-    const response = await instance.delete(`${RESOURCE}/${id}`);
+    const response = await instance.delete<Todo>(`${RESOURCE}/${id}`);
 
-    return response;
+    if (response.opcode === 200) {
+      return response.data;
+    }
+
+    throw new Error(response.message);
   } catch (error) {
     throw new Error('API deleteTodo error');
   }

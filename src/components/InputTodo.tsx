@@ -30,7 +30,7 @@ const InputTodo = ({ addTodo }: InputTodoProps) => {
         }
 
         const newItem = { title: trimmed };
-        const { data } = await createTodo(newItem);
+        const data = await createTodo(newItem);
 
         if (data) {
           return addTodo(data);
