@@ -15,7 +15,7 @@ interface InputTodoProps {
 const InputTodo = ({ addTodo }: InputTodoProps) => {
   const [inputText, setInputText] = useState('');
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
-  const [isSubmitting, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const { ref, setFocus } = useFocus<HTMLInputElement>();
@@ -40,8 +40,10 @@ const InputTodo = ({ addTodo }: InputTodoProps) => {
     const { signal } = controller;
 
     const debounced = debounce(async () => {
+      setIsSearching(true);
       const data = await getSuggestions({ params: { q: trimmed, page: 1, limit: 10 }, signal });
       setSuggestions(data.result);
+      setIsSearching(false);
     }, 500);
     debounced();
 
@@ -55,7 +57,7 @@ const InputTodo = ({ addTodo }: InputTodoProps) => {
     async (e: React.FormEvent<HTMLFormElement>) => {
       try {
         e.preventDefault();
-        setIsLoading(true);
+        setIsSubmitting(true);
 
         const trimmed = inputText.trim();
         if (!trimmed) {
@@ -73,7 +75,7 @@ const InputTodo = ({ addTodo }: InputTodoProps) => {
         alert('Something went wrong.');
       } finally {
         setInputText('');
-        setIsLoading(false);
+        setIsSubmitting(false);
       }
 
       return undefined;
@@ -89,6 +91,7 @@ const InputTodo = ({ addTodo }: InputTodoProps) => {
       onSubmit={handleSubmit}
     >
       <div className="icon icon-search" />
+
       <input
         className="input-text"
         placeholder="Add new todo..."
@@ -98,7 +101,36 @@ const InputTodo = ({ addTodo }: InputTodoProps) => {
         onKeyDown={detectUserTyping}
         disabled={isSubmitting}
       />
+
       {isSearching && <div className="icon icon-loading" />}
+
+      {suggestions.length !== 0 && (
+        <ul className="dropdown">
+          {suggestions.map((suggestion) => {
+            const keywordRegex = new RegExp(`(${inputText})`, 'gi');
+            const texts = suggestion.split(keywordRegex);
+            return (
+              <li className="dropdown-item">
+                {texts.map((text, idx) => {
+                  const key = text + idx;
+                  if (keywordRegex.test(text)) {
+                    return (
+                      <span key={key} className="text same">
+                        {text}
+                      </span>
+                    );
+                  }
+                  return (
+                    <span key={key} className="text">
+                      {text}
+                    </span>
+                  );
+                })}
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </form>
   );
 };
