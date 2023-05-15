@@ -4,14 +4,15 @@ import DropdownItem from './DropdownItem';
 interface DropdownProps {
   q: string;
   suggestions: Suggestion[];
+  onClickItem: (suggestion: Suggestion) => void;
   children: React.ReactNode;
 }
 
-const Dropdown = ({ q, suggestions, children }: DropdownProps) => {
+const Dropdown = ({ q, suggestions, onClickItem, children }: DropdownProps) => {
   return (
     <ul className="dropdown">
       {suggestions.map((suggestion) => (
-        <DropdownItem key={suggestion} q={q}>
+        <DropdownItem key={suggestion} q={q} onClickItem={onClickItem}>
           {suggestion}
         </DropdownItem>
       ))}

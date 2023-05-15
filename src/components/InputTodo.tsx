@@ -1,27 +1,24 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
-import { createTodo } from '../api/todo';
 import debounce from '../utils/debounce';
 import useFocus from '../hooks/useFocus';
 import useSuggestions from '../hooks/useSuggestions';
-import { Todo } from '../@types';
+import { Suggestion, Todo } from '../@types';
 import Dropdown from './Dropdown';
 
 const DEBOUNCE_TIME = 500;
 const INITIAL_PAGE_NUM = 1;
 
 interface InputTodoProps {
-  addTodo: (newTodo: Todo) => void;
+  addTodo: (title: Todo['title']) => void;
+  disabled: boolean;
 }
 
-const InputTodo = ({ addTodo }: InputTodoProps) => {
+const InputTodo = ({ addTodo, disabled }: InputTodoProps) => {
   const [inputText, setInputText] = useState('');
   const [page, setPage] = useState(INITIAL_PAGE_NUM);
   const { isLoading: isSearching, suggestions, hasMore } = useSuggestions(inputText, page);
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-
   const { ref, setFocus } = useFocus<HTMLInputElement>();
 
   useEffect(() => {
@@ -34,35 +31,16 @@ const InputTodo = ({ addTodo }: InputTodoProps) => {
     stopTyping();
   };
 
-  const handleSubmit = useCallback(
-    async (e: React.FormEvent<HTMLFormElement>) => {
-      try {
-        e.preventDefault();
-        setIsSubmitting(true);
+  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setInputText('');
+    addTodo(inputText);
+  };
 
-        const trimmed = inputText.trim();
-        if (!trimmed) {
-          return alert('Please write something');
-        }
-
-        const newItem = { title: trimmed };
-        const data = await createTodo(newItem);
-
-        if (data) {
-          return addTodo(data);
-        }
-      } catch (error) {
-        console.error(error);
-        alert('Something went wrong.');
-      } finally {
-        setInputText('');
-        setIsSubmitting(false);
-      }
-
-      return undefined;
-    },
-    [inputText, addTodo],
-  );
+  const onClickSuggestion = (suggestion: Suggestion) => {
+    setInputText('');
+    addTodo(suggestion);
+  };
 
   const handleMore = () => setPage((prev) => prev + 1);
 
@@ -71,7 +49,7 @@ const InputTodo = ({ addTodo }: InputTodoProps) => {
       className={['form-container', isSearching ? 'searching' : '', isTyping ? 'typing' : ''].join(
         ' ',
       )}
-      onSubmit={handleSubmit}
+      onSubmit={onSubmit}
     >
       <div className="icon icon-search" />
 
@@ -82,13 +60,13 @@ const InputTodo = ({ addTodo }: InputTodoProps) => {
         value={inputText}
         onChange={(e) => setInputText(e.target.value)}
         onKeyDown={detectUserTyping}
-        disabled={isSubmitting}
+        disabled={disabled}
       />
 
       {!hasMore && isSearching && <div className="icon icon-loading" />}
 
       {suggestions.length !== 0 && (
-        <Dropdown q={inputText} suggestions={suggestions}>
+        <Dropdown q={inputText} suggestions={suggestions} onClickItem={onClickSuggestion}>
           {hasMore &&
             (isSearching ? (
               <div className="more">
