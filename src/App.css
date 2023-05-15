@@ -12,6 +12,7 @@
   --neutral-dark-600: #9F9F9F;
   --neutral-dark-700: #7d7d7d;
   --neutral-dark-800: #4B4B4B;
+  --neutral-dark-black: #000000;
 }
 
 body {
@@ -42,10 +43,20 @@ body {
   margin-bottom: 20px;
   display: flex;
   align-items: center;
-  border: 1px solid var(--neutral-light-300);
+  box-shadow: 0 0 0 1px var(--neutral-light-300) inset;
   border-radius: 6px;
   padding: 12px 13px;
   gap: 8px;
+}
+
+.form-container:hover {
+  box-shadow: 0 0 0 3px var(--neutral-light-300) inset;
+}
+
+.form-container:active,
+.form-container.typing,
+.form-container.searching {
+  box-shadow: 0 0 0 1px var(--neutral-dark-600) inset;
 }
 
 .icon {
@@ -58,24 +69,32 @@ body {
   background-image: url(./assets/search.svg);
 }
 
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
 .icon-loading {
   background-image: url(./assets/loading.svg);
-}
-
-.input-text {
-  font-size: 1rem;
-  font-weight: 400;
-  flex: 1;
-  background-color: transparent;
-}
-
-.input-text::placeholder {
-  color: var(--neutral-dark-600);
+  animation: spin 1s linear infinite;
 }
 
 .input-text {
   outline: none;
   border: none;
+  font-size: 1rem;
+  font-weight: 400;
+  flex: 1;
+  background-color: transparent;
+  color: var(--neutral-dark-black);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.input-text::placeholder {
+  color: var(--neutral-dark-600);
 }
 
 .btn-plus {

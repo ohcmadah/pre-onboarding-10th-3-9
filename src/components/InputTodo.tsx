@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { createTodo } from '../api/todo';
+import debounce from '../utils/debounce';
 import useFocus from '../hooks/useFocus';
 import { Todo } from '../@types/todo';
 
@@ -10,7 +11,9 @@ interface InputTodoProps {
 
 const InputTodo = ({ addTodo }: InputTodoProps) => {
   const [inputText, setInputText] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsLoading] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   const { ref, setFocus } = useFocus<HTMLInputElement>();
 
   useEffect(() => {
@@ -47,8 +50,19 @@ const InputTodo = ({ addTodo }: InputTodoProps) => {
     [inputText, addTodo],
   );
 
+  const debounced = useMemo(() => debounce(() => setIsTyping(false), 500), [debounce]);
+  const detectUserTyping = () => {
+    setIsTyping(true);
+    debounced();
+  };
+
   return (
-    <form className="form-container" onSubmit={handleSubmit}>
+    <form
+      className={['form-container', isSearching ? 'searching' : '', isTyping ? 'typing' : ''].join(
+        ' ',
+      )}
+      onSubmit={handleSubmit}
+    >
       <div className="icon icon-search" />
       <input
         className="input-text"
@@ -56,9 +70,10 @@ const InputTodo = ({ addTodo }: InputTodoProps) => {
         ref={ref}
         value={inputText}
         onChange={(e) => setInputText(e.target.value)}
-        disabled={isLoading}
+        onKeyDown={detectUserTyping}
+        disabled={isSubmitting}
       />
-      {isLoading && <div className="icon icon-loading" />}
+      {isSearching && <div className="icon icon-loading" />}
     </form>
   );
 };
